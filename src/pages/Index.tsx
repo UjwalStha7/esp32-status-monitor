@@ -2,6 +2,7 @@ import { ConnectionStatusBar } from '@/components/ConnectionStatusBar';
 import { SystemConfigCard } from '@/components/SystemConfigCard';
 import { SensorCard } from '@/components/SensorCard';
 import { SensorChart } from '@/components/SensorChart';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useEsp32Connection } from '@/hooks/useEsp32Connection';
 import { API_CONFIG, getSoilMoistureCondition, getLightCondition } from '@/data/mockData';
 import { Leaf } from 'lucide-react';
@@ -40,12 +41,15 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <ConnectionStatusBar
-              isConnected={isConnected}
-              lastUpdate={lastUpdate}
-              isChecking={isChecking}
-              onRefresh={refresh}
-            />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <ConnectionStatusBar
+                isConnected={isConnected}
+                lastUpdate={lastUpdate}
+                isChecking={isChecking}
+                onRefresh={refresh}
+              />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
