@@ -93,29 +93,29 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
 
   return (
     <Card className="transition-all duration-300 hover:shadow-lg">
-      <CardHeader className="flex flex-row items-center gap-2 pb-4">
-        <div className="p-2 rounded-full bg-primary/10 text-primary">
+      <CardHeader className="flex flex-row items-center gap-2 pb-3 sm:pb-4 px-4 sm:px-6">
+        <div className="p-1.5 sm:p-2 rounded-full bg-primary/10 text-primary">
           {isSoil ? (
-            <Droplets className="h-5 w-5" />
+            <Droplets className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
-            <Sun className="h-5 w-5" />
+            <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
           )}
         </div>
-        <div>
-          <CardTitle className="text-base font-semibold">
+        <div className="min-w-0 flex-1">
+          <CardTitle className="text-sm sm:text-base font-semibold truncate">
             {isSoil ? 'Soil Moisture' : 'Light (LDR)'} History
           </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Real-time ADC values over time
+          <p className="text-[10px] sm:text-xs text-muted-foreground">
+            Real-time ADC values
           </p>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="h-[250px] w-full">
+      <CardContent className="px-2 sm:px-6">
+        <div className="h-[200px] sm:h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
-              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              margin={{ top: 10, right: 8, left: -15, bottom: 0 }}
             >
               <defs>
                 <linearGradient id={`gradient-${type}`} x1="0" y1="0" x2="0" y2="1">
@@ -130,18 +130,20 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
               />
               <XAxis 
                 dataKey="time" 
-                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={false}
                 interval="preserveStartEnd"
+                tickMargin={8}
               />
               <YAxis 
                 domain={[0, 5000]}
                 ticks={[0, 1000, 2000, 3000, 4000, 5000]}
-                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={false}
-                width={45}
+                width={40}
+                tickMargin={4}
               />
               <Tooltip content={<CustomTooltip />} />
               
@@ -151,14 +153,14 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
                   key={index}
                   y={threshold.value}
                   stroke={threshold.color}
-                  strokeWidth={2}
-                  strokeDasharray="8 4"
+                  strokeWidth={1.5}
+                  strokeDasharray="6 3"
                   strokeOpacity={0.8}
                   label={{
                     value: `— ${threshold.label}`,
                     position: 'right',
                     fill: threshold.color,
-                    fontSize: 10,
+                    fontSize: 8,
                     fontWeight: 500,
                   }}
                 />
@@ -171,21 +173,21 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
                 strokeWidth={2}
                 fill={`url(#gradient-${type})`}
                 dot={false}
-                activeDot={{ r: 4, fill: chartColor }}
+                activeDot={{ r: 3, fill: chartColor }}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
         
-        {/* Legend */}
-        <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-border">
+        {/* Legend - Responsive grid */}
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-4 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border px-2 sm:px-0">
           {thresholds.map((threshold, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex items-center gap-1.5 sm:gap-2">
               <div 
-                className="w-3 h-0.5"
+                className="w-2.5 sm:w-3 h-0.5"
                 style={{ backgroundColor: threshold.color }}
               />
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[10px] sm:text-xs text-muted-foreground">
                 {threshold.label} ({threshold.value})
               </span>
             </div>
