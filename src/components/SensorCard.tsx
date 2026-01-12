@@ -55,38 +55,38 @@ export const SensorCard = ({ type, value, condition }: SensorCardProps) => {
       "transition-all duration-300 hover:shadow-lg border-2",
       getConditionBorder(condition)
     )}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 sm:px-6">
+        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
           {isSoil ? 'Soil Moisture' : 'Light (LDR)'}
         </CardTitle>
         <div className={cn(
-          "p-2 rounded-full",
+          "p-1.5 sm:p-2 rounded-full",
           getIconBg(condition)
         )}>
           {isSoil ? (
-            <Droplets className="h-5 w-5" />
+            <Droplets className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
-            <Sun className="h-5 w-5" />
+            <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
           )}
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="px-4 sm:px-6">
+        <div className="space-y-2 sm:space-y-3">
           {/* ADC Value Display */}
           <div>
-            <p className="text-3xl font-bold tracking-tight">
+            <p className="text-2xl sm:text-3xl font-bold tracking-tight">
               {value}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
               ADC Value (0-4095)
             </p>
           </div>
           
           {/* Condition Badge */}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Status:</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">Status:</span>
             <span className={cn(
-              "px-3 py-1 rounded-full text-xs font-semibold",
+              "px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold",
               getConditionColor(condition)
             )}>
               {condition}
@@ -95,14 +95,16 @@ export const SensorCard = ({ type, value, condition }: SensorCardProps) => {
           
           {/* Threshold Info */}
           <div className="pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
               {isSoil ? (
                 <>
-                  Good: ≤1500 | Okay: 1501-2500 | Bad: &gt;2500
+                  <span className="hidden sm:inline">Good: ≤1500 | Okay: 1501-2500 | Bad: &gt;2500</span>
+                  <span className="sm:hidden">Good ≤1500 • Okay 1501-2500 • Bad &gt;2500</span>
                 </>
               ) : (
                 <>
-                  Bad: &lt;1500 | Okay: 1500-2999 | Good: ≥3000
+                  <span className="hidden sm:inline">Bad: &lt;1500 | Okay: 1500-2999 | Good: ≥3000</span>
+                  <span className="sm:hidden">Bad &lt;1500 • Okay 1500-2999 • Good ≥3000</span>
                 </>
               )}
             </p>
