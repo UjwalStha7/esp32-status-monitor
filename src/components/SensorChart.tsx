@@ -147,7 +147,7 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
               />
               <Tooltip content={<CustomTooltip />} />
               
-              {/* Reference lines for thresholds with cap-style markers */}
+              {/* Reference lines for thresholds */}
               {thresholds.map((threshold, index) => (
                 <ReferenceLine
                   key={index}
@@ -155,14 +155,7 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
                   stroke={threshold.color}
                   strokeWidth={1.5}
                   strokeDasharray="6 3"
-                  strokeOpacity={0.8}
-                  label={{
-                    value: `— ${threshold.label}`,
-                    position: 'right',
-                    fill: threshold.color,
-                    fontSize: 8,
-                    fontWeight: 500,
-                  }}
+                  strokeOpacity={0.7}
                 />
               ))}
               
