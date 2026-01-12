@@ -34,15 +34,17 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
   const chartColor = 'hsl(142, 70%, 45%)';
   const chartColorLight = 'hsl(142, 70%, 45%, 0.1)';
   
-  // Get thresholds for reference lines
+  // Get thresholds for reference lines with distinct colors
   const thresholds = isSoil 
     ? [
         { value: SOIL_MOISTURE_THRESHOLDS.GOOD, label: 'Good', color: 'hsl(142, 70%, 45%)' },
         { value: SOIL_MOISTURE_THRESHOLDS.OKAY, label: 'Okay', color: 'hsl(45, 95%, 50%)' },
+        { value: 2500, label: 'Bad', color: 'hsl(0, 75%, 55%)' },
       ]
     : [
         { value: LIGHT_THRESHOLDS.BAD, label: 'Bad', color: 'hsl(0, 75%, 55%)' },
-        { value: LIGHT_THRESHOLDS.OKAY, label: 'Good', color: 'hsl(142, 70%, 45%)' },
+        { value: LIGHT_THRESHOLDS.OKAY, label: 'Okay', color: 'hsl(45, 95%, 50%)' },
+        { value: 3000, label: 'Good', color: 'hsl(142, 70%, 45%)' },
       ];
 
   // Custom tooltip
@@ -134,7 +136,8 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
                 interval="preserveStartEnd"
               />
               <YAxis 
-                domain={[0, 4095]}
+                domain={[0, 5000]}
+                ticks={[0, 1000, 2000, 3000, 4000, 5000]}
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={false}
@@ -142,14 +145,22 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
               />
               <Tooltip content={<CustomTooltip />} />
               
-              {/* Reference lines for thresholds */}
+              {/* Reference lines for thresholds with cap-style markers */}
               {thresholds.map((threshold, index) => (
                 <ReferenceLine
                   key={index}
                   y={threshold.value}
                   stroke={threshold.color}
-                  strokeDasharray="5 5"
-                  strokeOpacity={0.6}
+                  strokeWidth={2}
+                  strokeDasharray="8 4"
+                  strokeOpacity={0.8}
+                  label={{
+                    value: `— ${threshold.label}`,
+                    position: 'right',
+                    fill: threshold.color,
+                    fontSize: 10,
+                    fontWeight: 500,
+                  }}
                 />
               ))}
               

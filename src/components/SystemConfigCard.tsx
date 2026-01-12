@@ -1,4 +1,4 @@
-import { Settings, Server, Clock, Info } from 'lucide-react';
+import { Settings, Server, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -76,21 +76,6 @@ export const SystemConfigCard = ({
           <span className="font-medium">{formatLastUpdate(lastUpdate)}</span>
         </div>
 
-        {/* Note */}
-        <div className="mt-4 p-4 bg-accent/10 rounded-lg border border-accent/20">
-          <div className="flex gap-2 text-sm">
-            <Info className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
-            <p>
-              <span className="font-medium text-accent">Note:</span>{' '}
-              <span className="text-muted-foreground">
-                Currently using mock data. Update{' '}
-                <code className="px-1.5 py-0.5 bg-muted rounded text-xs">API_CONFIG</code> in{' '}
-                <code className="px-1.5 py-0.5 bg-muted rounded text-xs">src/data/mockData.ts</code>{' '}
-                with your ESP32's IP address to connect to real sensors.
-              </span>
-            </p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
