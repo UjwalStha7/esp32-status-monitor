@@ -110,12 +110,12 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
           </p>
         </div>
       </CardHeader>
-      <CardContent className="px-2 sm:px-6">
-        <div className="h-[200px] sm:h-[250px] w-full">
+      <CardContent className="px-3 sm:px-6">
+        <div className="h-[220px] sm:h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
-              margin={{ top: 10, right: 8, left: -15, bottom: 0 }}
+              margin={{ top: 10, right: 50, left: 5, bottom: 5 }}
             >
               <defs>
                 <linearGradient id={`gradient-${type}`} x1="0" y1="0" x2="0" y2="1">
@@ -130,7 +130,7 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
               />
               <XAxis 
                 dataKey="time" 
-                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={false}
                 interval="preserveStartEnd"
@@ -139,11 +139,11 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
               <YAxis 
                 domain={[0, 5000]}
                 ticks={[0, 1000, 2000, 3000, 4000, 5000]}
-                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={false}
-                width={40}
-                tickMargin={4}
+                width={45}
+                tickMargin={8}
               />
               <Tooltip content={<CustomTooltip />} />
               
