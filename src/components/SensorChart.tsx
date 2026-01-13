@@ -1,7 +1,14 @@
+/**
+ * ============================================================================
+ * SENSOR CHART COMPONENT
+ * ============================================================================
+ * 
+ * Displays historical sensor data in an area chart with threshold lines.
+ * Uses data from useSensorData hook.
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -12,104 +19,93 @@ import {
   AreaChart,
 } from 'recharts';
 import { Droplets, Sun } from 'lucide-react';
-import { SOIL_MOISTURE_THRESHOLDS, LIGHT_THRESHOLDS } from '@/data/mockData';
+import type { HistoryDataPoint, SensorType } from '@/types/sensor.types';
+import { 
+  SOIL_MOISTURE_THRESHOLDS, 
+  LIGHT_THRESHOLDS,
+  getSoilMoistureCondition,
+  getLightCondition,
+  CHART_CONFIG,
+} from '@/config/app.config';
 
-interface HistoryDataPoint {
-  time: string;
-  timestamp: number;
-  soilMoisture: number;
-  light: number;
-}
+// ============================================================================
+// COMPONENT PROPS
+// ============================================================================
 
 interface SensorChartProps {
-  type: 'soil' | 'light';
+  type: SensorType;
   data: HistoryDataPoint[];
 }
 
-export const SensorChart = ({ type, data }: SensorChartProps) => {
-  const isSoil = type === 'soil';
-  const dataKey = isSoil ? 'soilMoisture' : 'light';
-  
-  // Colors for the chart
-  const chartColor = 'hsl(142, 70%, 45%)';
-  const chartColorLight = 'hsl(142, 70%, 45%, 0.1)';
-  
-  // Get thresholds for reference lines with distinct colors
-  const thresholds = isSoil 
-    ? [
-        { value: SOIL_MOISTURE_THRESHOLDS.GOOD, label: 'Good', color: 'hsl(142, 70%, 45%)' },
-        { value: SOIL_MOISTURE_THRESHOLDS.OKAY, label: 'Okay', color: 'hsl(45, 95%, 50%)' },
-        { value: 2500, label: 'Bad', color: 'hsl(0, 75%, 55%)' },
-      ]
-    : [
-        { value: LIGHT_THRESHOLDS.BAD, label: 'Bad', color: 'hsl(0, 75%, 55%)' },
-        { value: LIGHT_THRESHOLDS.OKAY, label: 'Okay', color: 'hsl(45, 95%, 50%)' },
-        { value: 3000, label: 'Good', color: 'hsl(142, 70%, 45%)' },
-      ];
+// ============================================================================
+// CHART CONFIGURATION
+// ============================================================================
 
-  // Custom tooltip
+const getChartConfig = (type: SensorType) => {
+  const isSoil = type === 'soil';
+  
+  return {
+    dataKey: isSoil ? 'soilMoisture' : 'light',
+    title: isSoil ? 'Soil Moisture' : 'Light (LDR)',
+    icon: isSoil ? Droplets : Sun,
+    thresholds: isSoil 
+      ? SOIL_MOISTURE_THRESHOLDS.levels 
+      : LIGHT_THRESHOLDS.levels,
+    getCondition: isSoil ? getSoilMoistureCondition : getLightCondition,
+  };
+};
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+export const SensorChart = ({ type, data }: SensorChartProps) => {
+  const config = getChartConfig(type);
+  const Icon = config.icon;
+  
+  // Chart colors - using primary theme color
+  const chartColor = 'hsl(142, 70%, 45%)';
+
+  // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const value = payload[0].value;
-      let condition = '';
-      let conditionColor = '';
-      
-      if (isSoil) {
-        if (value <= SOIL_MOISTURE_THRESHOLDS.GOOD) {
-          condition = 'Good';
-          conditionColor = 'text-success';
-        } else if (value <= SOIL_MOISTURE_THRESHOLDS.OKAY) {
-          condition = 'Okay';
-          conditionColor = 'text-warning';
-        } else {
-          condition = 'Bad';
-          conditionColor = 'text-destructive';
-        }
-      } else {
-        if (value < LIGHT_THRESHOLDS.BAD) {
-          condition = 'Bad';
-          conditionColor = 'text-destructive';
-        } else if (value < LIGHT_THRESHOLDS.OKAY) {
-          condition = 'Okay';
-          conditionColor = 'text-warning';
-        } else {
-          condition = 'Good';
-          conditionColor = 'text-success';
-        }
-      }
-      
-      return (
-        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-xs text-muted-foreground mb-1">{label}</p>
-          <p className="text-lg font-bold">{value}</p>
-          <p className={`text-sm font-medium ${conditionColor}`}>
-            Status: {condition}
-          </p>
-        </div>
-      );
-    }
-    return null;
+    if (!active || !payload?.length) return null;
+    
+    const value = payload[0].value;
+    const condition = config.getCondition(value);
+    
+    const conditionColors = {
+      Good: 'text-success',
+      Okay: 'text-warning',
+      Bad: 'text-destructive',
+    };
+    
+    return (
+      <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+        <p className="text-xs text-muted-foreground mb-1">{label}</p>
+        <p className="text-lg font-bold">{value}</p>
+        <p className={`text-sm font-medium ${conditionColors[condition]}`}>
+          Status: {condition}
+        </p>
+      </div>
+    );
   };
 
   return (
     <Card className="transition-all duration-300 hover:shadow-lg">
       <CardHeader className="flex flex-row items-center gap-2 pb-3 sm:pb-4 px-4 sm:px-6">
         <div className="p-1.5 sm:p-2 rounded-full bg-primary/10 text-primary">
-          {isSoil ? (
-            <Droplets className="h-4 w-4 sm:h-5 sm:w-5" />
-          ) : (
-            <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
-          )}
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
         <div className="min-w-0 flex-1">
           <CardTitle className="text-sm sm:text-base font-semibold truncate">
-            {isSoil ? 'Soil Moisture' : 'Light (LDR)'} History
+            {config.title} History
           </CardTitle>
           <p className="text-[10px] sm:text-xs text-muted-foreground">
             Real-time ADC values
           </p>
         </div>
       </CardHeader>
+      
       <CardContent className="px-3 sm:px-6">
         <div className="h-[220px] sm:h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -123,11 +119,13 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
                   <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
+              
               <CartesianGrid 
                 strokeDasharray="3 3" 
                 stroke="hsl(var(--border))" 
                 vertical={false}
               />
+              
               <XAxis 
                 dataKey="time" 
                 tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
@@ -136,19 +134,21 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
                 interval="preserveStartEnd"
                 tickMargin={8}
               />
+              
               <YAxis 
-                domain={[0, 5000]}
-                ticks={[0, 1000, 2000, 3000, 4000, 5000]}
+                domain={[CHART_CONFIG.yAxisMin, CHART_CONFIG.yAxisMax]}
+                ticks={CHART_CONFIG.yAxisTicks}
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={false}
                 width={45}
                 tickMargin={8}
               />
+              
               <Tooltip content={<CustomTooltip />} />
               
-              {/* Reference lines for thresholds */}
-              {thresholds.map((threshold, index) => (
+              {/* Threshold reference lines */}
+              {config.thresholds.slice(0, -1).map((threshold, index) => (
                 <ReferenceLine
                   key={index}
                   y={threshold.value}
@@ -161,7 +161,7 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
               
               <Area
                 type="monotone"
-                dataKey={dataKey}
+                dataKey={config.dataKey}
                 stroke={chartColor}
                 strokeWidth={2}
                 fill={`url(#gradient-${type})`}
@@ -172,9 +172,9 @@ export const SensorChart = ({ type, data }: SensorChartProps) => {
           </ResponsiveContainer>
         </div>
         
-        {/* Legend - Responsive grid */}
+        {/* Threshold legend */}
         <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-4 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border px-2 sm:px-0">
-          {thresholds.map((threshold, index) => (
+          {config.thresholds.slice(0, -1).map((threshold, index) => (
             <div key={index} className="flex items-center gap-1.5 sm:gap-2">
               <div 
                 className="w-2.5 sm:w-3 h-0.5"
