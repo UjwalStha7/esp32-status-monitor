@@ -82,9 +82,16 @@ export class ESP32Service {
 
   /**
    * Get the full API URL
+   * Supports both full URLs (https://...) and IP addresses
    */
   private get apiUrl(): string {
-    return `http://${this.config.endpoint}/`;
+    const endpoint = this.config.endpoint;
+    // If endpoint already includes protocol, use as-is
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+      return endpoint;
+    }
+    // Otherwise, assume it's an IP address
+    return `http://${endpoint}/`;
   }
 
   /**
