@@ -53,7 +53,7 @@ export const DATA_SOURCE_MODE: DataSourceMode = 'esp32';
  * { "soilMoisture": 1234, "light": 3456 }
  */
 export const ESP32_CONFIG: ESP32Config = {
-  endpoint: '',  // ← ADD YOUR RENDER API URL HERE (e.g., 'your-app.onrender.com/api/sensor')
+  endpoint: 'https://plant-monitor-api.onrender.com',  // ← ADD YOUR RENDER API URL HERE (e.g., 'your-app.onrender.com/api/sensor')
   updateInterval: 5,           // Poll every 5 seconds
   timeout: 10000,              // 10 second timeout (cloud APIs need more time)
 };
