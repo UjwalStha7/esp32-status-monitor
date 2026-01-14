@@ -42,21 +42,20 @@ export const DATA_SOURCE_MODE: DataSourceMode = 'esp32';
 // ============================================================================
 
 /**
- * ESP32 HTTP API Configuration
+ * Backend API Configuration
  * 
  * INTEGRATION STEPS:
- * 1. Find your ESP32's IP address (check Serial Monitor or router)
- * 2. Update the 'endpoint' below with that IP
- * 3. Ensure ESP32 firmware serves JSON at http://<ip>/
+ * 1. Deploy your backend to Render (or any cloud service)
+ * 2. Update the 'endpoint' below with your Render URL
+ * 3. Ensure your backend returns JSON with sensor data
  * 
- * CORS NOTE: The ESP32 must send proper CORS headers:
- *   Access-Control-Allow-Origin: *
- *   Access-Control-Allow-Methods: GET, POST, OPTIONS
+ * Your backend should return data in this format:
+ * { "soilMoisture": 1234, "light": 3456 }
  */
 export const ESP32_CONFIG: ESP32Config = {
-  endpoint: '192.168.137.77',  // ← UPDATE THIS with your ESP32's IP
+  endpoint: '',  // ← ADD YOUR RENDER API URL HERE (e.g., 'your-app.onrender.com/api/sensor')
   updateInterval: 5,           // Poll every 5 seconds
-  timeout: 3000,               // 3 second request timeout
+  timeout: 10000,              // 10 second timeout (cloud APIs need more time)
 };
 
 // ============================================================================
