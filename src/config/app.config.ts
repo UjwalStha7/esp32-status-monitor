@@ -38,25 +38,38 @@ import type {
 export const DATA_SOURCE_MODE: DataSourceMode = 'esp32';
 
 // ============================================================================
-// ESP32 REST API CONFIGURATION
+// BACKEND API CONFIGURATION
 // ============================================================================
 
 /**
  * Backend API Configuration
  * 
- * INTEGRATION STEPS:
- * 1. Deploy your backend to Render (or any cloud service)
- * 2. Update the 'endpoint' below with your Render URL
- * 3. Ensure your backend returns JSON with sensor data
+ * Your Render-deployed backend with MongoDB Atlas storage.
+ * The ESP32 sends data to this backend, and the frontend fetches from it.
  * 
- * Your backend should return data in this format:
- * { "soilMoisture": 1234, "light": 3456 }
+ * API Response format from /api/readings/latest:
+ * {
+ *   "success": true,
+ *   "reading": {
+ *     "soilValue": 2067,
+ *     "ldrValue": 2858,
+ *     "soilCondition": "Okay",
+ *     "lightCondition": "Okay",
+ *     "receivedAt": "2026-01-14T09:03:00.102Z"
+ *   }
+ * }
  */
 export const ESP32_CONFIG: ESP32Config = {
-  endpoint: 'https://plant-monitor-api.onrender.com',  // ← ADD YOUR RENDER API URL HERE (e.g., 'your-app.onrender.com/api/sensor')
+  endpoint: 'https://plant-monitor-api.onrender.com/api/readings/latest',
   updateInterval: 5,           // Poll every 5 seconds
-  timeout: 10000,              // 10 second timeout (cloud APIs need more time)
+  timeout: 15000,              // 15 second timeout (Render cold starts can be slow)
 };
+
+/**
+ * Connection timeout threshold in milliseconds
+ * If no data received within this time, ESP32 is considered disconnected
+ */
+export const CONNECTION_TIMEOUT_MS = 60000; // 1 minute
 
 // ============================================================================
 // WEBSOCKET CONFIGURATION (FUTURE)
