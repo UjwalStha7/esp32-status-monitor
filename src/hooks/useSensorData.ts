@@ -3,26 +3,14 @@
  * USE SENSOR DATA HOOK
  * ============================================================================
  * 
- * Unified hook for accessing sensor data from any source.
- * Automatically selects the data source based on configuration.
+ * Unified hook for accessing sensor data from the backend API.
+ * Fetches real sensor readings from your Render-deployed backend.
  * 
- * USAGE:
- * ------
- * ```tsx
- * const { 
- *   sensorData, 
- *   historyData, 
- *   connectionState, 
- *   refresh 
- * } = useSensorData();
- * ```
- * 
- * DATA SOURCE SWITCHING:
- * ----------------------
- * Change DATA_SOURCE_MODE in app.config.ts to switch between:
- * - 'mock': Simulated data for development
- * - 'esp32': Real HTTP polling from ESP32
- * - 'websocket': Real-time WebSocket (future)
+ * FEATURES:
+ * - Polls the backend API at configured intervals
+ * - Determines ESP32 connection status from data timestamps
+ * - Maintains history for chart visualization
+ * - Falls back gracefully on errors
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -39,30 +27,33 @@ import {
 } from '@/config/app.config';
 import { 
   esp32Service,
+  type ExtendedSensorData,
+} from '@/services/esp32Service';
+import {
   generateMockHistoryData,
   generateRandomSensorData,
   createHistoryPoint,
   DEFAULT_MOCK_DATA,
-} from '@/services';
+} from '@/services/mockDataService';
 
 // ============================================================================
 // HOOK INTERFACE
 // ============================================================================
 
 export interface UseSensorDataResult {
-  // Current sensor readings
+  /** Current sensor readings */
   sensorData: SensorData;
-  // Historical data for charts
+  /** Historical data for charts */
   historyData: HistoryDataPoint[];
-  // Connection state
+  /** Connection state (ESP32 online/offline) */
   connectionState: ConnectionState;
-  // Configuration info
+  /** Configuration info */
   config: {
     endpoint: string;
     updateInterval: number;
     dataSource: DataSourceMode;
   };
-  // Manual refresh function
+  /** Manual refresh function */
   refresh: () => Promise<void>;
 }
 
@@ -74,27 +65,28 @@ export const useSensorData = (): UseSensorDataResult => {
   // Sensor data state
   const [sensorData, setSensorData] = useState<SensorData>(DEFAULT_MOCK_DATA);
   
-  // History data state - initialize with mock history for immediate chart display
-  const [historyData, setHistoryData] = useState<HistoryDataPoint[]>(() => 
-    generateMockHistoryData(20, APP_CONFIG.esp32.updateInterval)
-  );
+  // History data state - start empty, will fill with real data
+  const [historyData, setHistoryData] = useState<HistoryDataPoint[]>([]);
   
   // Connection state
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
     lastUpdate: null,
-    isChecking: false,
+    isChecking: true,
     error: null,
   });
 
   // Ref to track mounted state
   const isMountedRef = useRef(true);
+  
+  // Track if we've done initial fetch
+  const initialFetchDone = useRef(false);
 
   /**
    * Add a new point to history, maintaining max length
    */
-  const addHistoryPoint = useCallback((data: SensorData) => {
-    const newPoint = createHistoryPoint(data);
+  const addHistoryPoint = useCallback((data: SensorData, timestamp?: Date) => {
+    const newPoint = createHistoryPoint(data, timestamp);
     setHistoryData((prev) => {
       const updated = [...prev, newPoint];
       return updated.slice(-HISTORY_MAX_POINTS);
@@ -102,7 +94,7 @@ export const useSensorData = (): UseSensorDataResult => {
   }, []);
 
   /**
-   * Fetch data from the appropriate source
+   * Fetch data from the backend API
    */
   const fetchData = useCallback(async () => {
     if (!isMountedRef.current) return;
@@ -115,13 +107,25 @@ export const useSensorData = (): UseSensorDataResult => {
 
     try {
       let newData: SensorData;
+      let isESP32Online = false;
+      let receivedAt: Date | null = null;
 
       if (DATA_SOURCE_MODE === 'mock') {
         // Use mock data service
         newData = generateRandomSensorData();
+        isESP32Online = true;
+        receivedAt = new Date();
       } else {
-        // Use ESP32 service
-        newData = await esp32Service.fetchSensorData();
+        // Fetch from real backend API
+        const extendedData: ExtendedSensorData = await esp32Service.fetchSensorData();
+        
+        newData = {
+          soilMoisture: extendedData.soilMoisture,
+          light: extendedData.light,
+        };
+        
+        isESP32Online = extendedData.isESP32Online;
+        receivedAt = extendedData.receivedAt;
       }
 
       if (!isMountedRef.current) return;
@@ -129,33 +133,37 @@ export const useSensorData = (): UseSensorDataResult => {
       const now = new Date();
       
       setSensorData(newData);
-      addHistoryPoint(newData);
+      addHistoryPoint(newData, receivedAt || now);
       
       setConnectionState({
-        isConnected: DATA_SOURCE_MODE !== 'mock', // Mock is always "connected"
-        lastUpdate: now,
+        isConnected: isESP32Online,
+        lastUpdate: receivedAt || now,
         isChecking: false,
-        error: null,
+        error: isESP32Online ? null : 'ESP32 offline - no recent data',
       });
 
     } catch (error) {
       if (!isMountedRef.current) return;
 
-      // On error, fall back to mock data to keep UI active
-      const fallbackData = generateRandomSensorData();
-      const now = new Date();
-      
-      setSensorData(fallbackData);
-      addHistoryPoint(fallbackData);
+      const errorMessage = error instanceof Error ? error.message : 'Connection failed';
 
+      // Keep showing last known values, but update connection state
       setConnectionState({
         isConnected: false,
-        lastUpdate: now,
+        lastUpdate: connectionState.lastUpdate,
         isChecking: false,
-        error: error instanceof Error ? error.message : 'Connection failed',
+        error: errorMessage,
       });
+
+      // If this is the first fetch and it failed, use mock data for initial display
+      if (!initialFetchDone.current) {
+        setSensorData(DEFAULT_MOCK_DATA);
+        setHistoryData(generateMockHistoryData(10, APP_CONFIG.esp32.updateInterval));
+      }
     }
-  }, [addHistoryPoint]);
+
+    initialFetchDone.current = true;
+  }, [addHistoryPoint, connectionState.lastUpdate]);
 
   /**
    * Manual refresh function
@@ -184,7 +192,7 @@ export const useSensorData = (): UseSensorDataResult => {
       isMountedRef.current = false;
       clearInterval(intervalId);
     };
-  }, [fetchData]);
+  }, []); // Empty deps - fetchData is stable via useCallback
 
   return {
     sensorData,
@@ -205,7 +213,6 @@ export const useSensorData = (): UseSensorDataResult => {
 
 /**
  * Hook to get only the current sensor readings
- * Lighter weight if you don't need history
  */
 export const useCurrentSensorData = () => {
   const { sensorData, connectionState, refresh } = useSensorData();
@@ -214,7 +221,6 @@ export const useCurrentSensorData = () => {
 
 /**
  * Hook to get only history data
- * Useful for chart-only components
  */
 export const useSensorHistory = () => {
   const { historyData } = useSensorData();
