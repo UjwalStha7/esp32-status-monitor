@@ -68,8 +68,11 @@ export const ESP32_CONFIG: ESP32Config = {
 /**
  * Connection timeout threshold in milliseconds
  * If no data received within this time, ESP32 is considered disconnected
+ * 
+ * NOTE: This should match the backend's timeout (120 seconds / 2 minutes)
+ * The backend considers ESP32 "Connected" if data was received within 2 minutes
  */
-export const CONNECTION_TIMEOUT_MS = 60000; // 1 minute
+export const CONNECTION_TIMEOUT_MS = 120000; // 2 minutes (matches backend)
 
 // ============================================================================
 // WEBSOCKET CONFIGURATION (FUTURE)
